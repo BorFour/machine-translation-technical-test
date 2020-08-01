@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Ignore the documents
-documents_challenge/
+data/

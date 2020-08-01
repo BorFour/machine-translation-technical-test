@@ -1,15 +1,14 @@
 from typing import Dict, List, Tuple
 import os
-import logging as log
 from pprint import pprint
 
 import tqdm
 import pandas as pd
 
+from utils import log
 
-log.getLogger().setLevel(log.INFO)
 
-DOCUMENTS_DIR = "./documents_challenge/"
+DOCUMENTS_DIR = "./data/documents_challenge/"
 
 
 def load_corpus_from_dir(corpus_dir: str) -> List[Tuple[str, str, str]]:
