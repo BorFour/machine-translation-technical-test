@@ -2,11 +2,13 @@
 SEE: https://huggingface.co/models?search=Helsinki-NLP
 
 """
-from typing import Tuple
+from typing import Tuple, Union
 from pprint import pprint
 
 import torch
 from transformers import MarianTokenizer, MarianMTModel
+
+from types import TranslationInput
 
 
 LANGUAGE_MODEL_DICT = {
@@ -45,7 +47,7 @@ def _get_or_cache_model(language_code: str):
     return tokenizer, model
 
 
-def _translate_text(text: str, tokenizer: MarianTokenizer, model: MarianMTModel) -> str:
+def _translate_text(text: TranslationInput, tokenizer: MarianTokenizer, model: MarianMTModel) -> TranslationOutput:
     if isinstance(text, str):
         texts = [text]
     elif isinstance(text, list):
@@ -76,22 +78,25 @@ def _translate_text(text: str, tokenizer: MarianTokenizer, model: MarianMTModel)
         del gen
 
 
-def translate_french_text_to_spanish(text: str) -> str:
+def translate_french_text_to_spanish(text: TranslationInput) -> TranslationOutput:
     tokenizer, model = _get_or_cache_model("fr")
     return _translate_text(text, tokenizer, model)
 
 
-def translate_english_text_to_spanish(text: str) -> str:
+def translate_english_text_to_spanish(text: TranslationInput) -> TranslationOutput:
+    if isinstance(text, str):
+        text = [text]
+
     tokenizer, model = _get_or_cache_model("en")
-    return _translate_text(f">>es<< {text}", tokenizer, model)
+    return _translate_text([f">>es<< {t}" for t in text], tokenizer, model)
 
 
-def translate_spanish_text_to_spanish(text: str) -> str:
+def translate_spanish_text_to_spanish(text: TranslationInput) -> TranslationOutput:
     # Let's just return the same text for now
     return text
 
 
-def translate_to_spanish(text: str, source_language: str) -> str:
+def translate_to_spanish(text: TranslationInput, source_language: str) -> TranslationOutput:
     if source_language == "es":
         return translate_spanish_text_to_spanish(text)
     elif source_language == "fr":
@@ -111,6 +116,8 @@ I ain't the sharpest tool in the shed
 She was looking kinda dumb
 With her finger and her thumb
 In shape of an "L" on her forehead."""
+
+    text = "you are just conning him"
 
     translation = translate_to_spanish(text, "en")
     pprint(translation)
