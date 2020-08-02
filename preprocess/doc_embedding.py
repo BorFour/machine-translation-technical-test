@@ -16,19 +16,22 @@ from utils import log
 
 nltk.download("punkt")
 
-## Exapmple document (list of sentences)
-texts = [
-    "I love data science",
-    "I love coding in python",
-    "I love building NLP tool",
-    "This is a good phone",
-    "This is a good TV",
-    "This is a good laptop",
-]
+
+class DummyEmbedding(KeyedVectors):
+    """The real FastText embeddings used for the document classifier take quite long to load.
+    Thus, this class implements the basic behavior needed to emulate an embedding model with dummy methods"""
+
+    def __init__(self):
+        pass
+
+    def __getitem__(self, key):
+        return np.zeros((300,))
+
+    def __contains__(self, element):
+        return True
 
 
 def load_word_embeddings_model(path: str = "data/fasttext-sbwc.vec.gz") -> KeyedVectors:
-    # model = FastText.load_fasttext_format('data/embeddings-l-model')
     log.info(f"Loading model from {path}")
     model = KeyedVectors.load_word2vec_format(path)
 

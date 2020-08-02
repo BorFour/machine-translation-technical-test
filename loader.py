@@ -9,6 +9,7 @@ from utils import log
 
 
 DOCUMENTS_DIR = "./data/documents_challenge/"
+TRANSLATIONS_OUTPUT_DIR = "./data/translations_es/"
 
 
 def load_corpus_from_dir(corpus_dir: str) -> List[Tuple[str, str, str]]:
@@ -37,8 +38,8 @@ def load_corpus_as_dataframe(corpus_dir: str) -> pd.DataFrame:
     return df
 
 
-def load_translation(context: str, language: str, docname: str) -> str:
-    filepath = os.path.join(TRANSLATIONS_OUTPUT_DIR, context, language, docname)
+def load_translation(context: str, language: str, docname: str, translations_dir: str = TRANSLATIONS_OUTPUT_DIR) -> str:
+    filepath = os.path.join(translations_dir, context, language, docname)
 
     try:
         with open(filepath, "rt") as f:
@@ -49,9 +50,9 @@ def load_translation(context: str, language: str, docname: str) -> str:
     return translation
 
 
-def load_translations_to_df(df: pd.DataFrame) -> pd.DataFrame:
+def load_translations_to_df(df: pd.DataFrame, translations_dir: str = TRANSLATIONS_OUTPUT_DIR) -> pd.DataFrame:
     df["loaded_translation"] = df[["context", "language", "docname"]].apply(
-        lambda x: load_translation(x.context, x.language, x.docname), axis=1
+        lambda x: load_translation(x.context, x.language, x.docname, translations_dir), axis=1
     )
     return df
 
