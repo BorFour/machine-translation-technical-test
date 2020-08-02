@@ -66,4 +66,3 @@ if __name__ == "__main__":
     tokens = word_tokenize(sentence)
     tokens_in_model = words_in_model(tokens, model)
     v = document_to_vector(tokens_in_model, model)
-    breakpoint()

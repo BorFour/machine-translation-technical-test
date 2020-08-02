@@ -5,10 +5,11 @@ SEE: https://huggingface.co/models?search=Helsinki-NLP
 from typing import Tuple, Union
 from pprint import pprint
 
+import pandas as pd
 import torch
 from transformers import MarianTokenizer, MarianMTModel
 
-from types import TranslationInput
+from custom_types import TranslationInput, TranslationOutput
 
 
 LANGUAGE_MODEL_DICT = {
@@ -111,6 +112,13 @@ def translate_to_spanish(
         raise ValueError(
             f"Translation from '{source_language}' to Spanish is not implemented"
         )
+
+
+def translate_to_spanish_from_df(df: pd.DataFrame) -> pd.DataFrame:
+    df["translated_text"] = df.apply(
+        lambda x: translate_to_spanish(x.cleaned_text, x.detected_language)[0], axis=1,
+    )
+    return df
 
 
 if __name__ == "__main__":
