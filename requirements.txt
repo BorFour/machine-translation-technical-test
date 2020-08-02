@@ -1,4 +1,4 @@
-tranformers==3.0.2
+transformers==3.0.2
 langdetect==1.0.8
 gensim==3.8.3
 nltk==3.5

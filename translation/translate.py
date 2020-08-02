@@ -10,12 +10,7 @@ import torch
 from transformers import MarianTokenizer, MarianMTModel
 
 from custom_types import TranslationInput, TranslationOutput
-
-
-LANGUAGE_MODEL_DICT = {
-    "fr": "Helsinki-NLP/opus-mt-fr-es",
-    "en": "Helsinki-NLP/opus-mt-en-ROMANCE",
-}
+from .available_languages import AVAILABLE_LANGUAGES
 
 
 CACHED_MODELS = {}
@@ -36,7 +31,7 @@ def _load_marianmt(model_name: str) -> Tuple[MarianTokenizer, MarianMTModel]:
 def _get_or_cache_model(language_code: str):
     global CACHED_MODELS
 
-    model_name = LANGUAGE_MODEL_DICT[language_code]
+    model_name = AVAILABLE_LANGUAGES[language_code]
     cache = CACHED_MODELS.get("language_code")
 
     if not cache:
@@ -81,8 +76,10 @@ def _translate_text(
         del gen
 
 
-def translate_french_text_to_spanish(text: TranslationInput) -> TranslationOutput:
-    tokenizer, model = _get_or_cache_model("fr")
+def translate_text_to_spanish(
+    text: TranslationInput, source_language: str
+) -> TranslationOutput:
+    tokenizer, model = _get_or_cache_model(source_language)
     return _translate_text(text, tokenizer, model)
 
 
@@ -103,15 +100,17 @@ def translate_to_spanish(
     text: TranslationInput, source_language: str
 ) -> TranslationOutput:
     if source_language == "es":
-        return translate_spanish_text_to_spanish(text)
-    elif source_language == "fr":
-        return translate_french_text_to_spanish(text)
+        return text
     elif source_language == "en":
+        # English is a special case that needs to be handled independently
         return translate_english_text_to_spanish(text)
     else:
-        raise ValueError(
-            f"Translation from '{source_language}' to Spanish is not implemented"
-        )
+        if source_language in AVAILABLE_LANGUAGES.keys():
+            return translate_text_to_spanish(text, source_language)
+        else:
+            raise ValueError(
+                f"Translation from '{source_language}' to Spanish is not available"
+            )
 
 
 def translate_to_spanish_from_df(df: pd.DataFrame) -> pd.DataFrame:

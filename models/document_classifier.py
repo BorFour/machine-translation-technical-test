@@ -158,11 +158,12 @@ class DocumentClassifier(object):
         )
 
         predictions = [
-            Prediction(self.class_decoder[y], prob[0])
-            for y, prob in zip(y_pred.tolist(), prob_pred.tolist())
+            Prediction(language, self.class_decoder[y], prob[0])
+            for language, y, prob in zip(
+                df.detected_language.tolist(), y_pred.tolist(), prob_pred.tolist()
+            )
         ]
 
-        breakpoint()
         return predictions
 
     def save(self, filename: str = "document_classifier.joblib.pkl"):
@@ -190,7 +191,6 @@ if __name__ == "__main__":
 Elle se situe au cœur d'un vaste bassin sédimentaire aux sols fertiles et au climat tempéré, le bassin parisien, sur une boucle de la Seine, entre les confluents de celle-ci avec la Marne et l'Oise. Paris est également le chef-lieu de la région Île-de-France et le centre de la métropole du Grand Paris, créée en 2016. Elle est divisée en arrondissements, comme les villes de Lyon et de Marseille, au nombre de vingt. Administrativement, la ville constitue depuis le 1er janvier 2019 une collectivité à statut particulier nommée « Ville de Paris » (auparavant, elle était à la fois une commune et un département). L'État y dispose de prérogatives particulières exercées par le préfet de police de Paris. La ville a connu de profondes transformations sous le Second Empire dans les décennies 1850 et 1860 à travers d'importants travaux consistant notamment au percement de larges avenues, places et jardins et la construction de nombreux édifices, dirigés par le baron Haussmann, donnant à l'ancien Paris médiéval le visage qu'on lui connait aujourd'hui.
 La ville de Paris comptait 2,187 millions d'habitants au 1er janvier 2020. Ses habitants sont appelés Parisiens. L'agglomération parisienne s’est largement développée au cours du xxe siècle, rassemblant 10,73 millions d'habitants au 1er janvier 2020, et son aire urbaine (l'agglomération et la couronne périurbaine) comptait 12,78 millions d'habitants. L'agglomération parisienne est ainsi la plus peuplée de France, elle est la quatrième du continent européen et la 32e plus peuplée du monde au 1er janvier 2019
 """,
-            """i read this book because in my town, everyone uses it and order. this is my pharmacist who advised me she was so thin i asked her what she had done and instead of just selling snake oil capsules, she advised me this book to 5 euros. of course, we must make an effort to lose 25 pounds but with the book, i had a companion. the author was able to talk to me just with strong arguments and above all i felt he knew many cases like mine. he is in his full experience, simplicity and compassion for those like me who lived with all that weight that stuck to my body and never want to leave. i do not think it is a fad diet that outperforms the others but i do believe that there are people who can speak to others and to be born of clicks. i might be low but this book made me strong, i have annotated so that i'm on my third. when one is very big as i was, non-large do not understand or are afraid to offend you by speaking, then this book was like a companion journal. i am a pedicure and i have advised all my clients that i read great suffering on their feet swollen and deformed. i can provide other service that i made my pharmacist. i advise all those who suffer for having lost weight is such a happiness that i agreed to move to phase 3 of this plan, which requires 10 days of consolidation for each kilo lost gradually widening at all. now i'm in stage 4, meaning that i eat everything except on thursdays when i control. i never thank enough the author of this book.""",
         ]
     )
     pprint(prediction)

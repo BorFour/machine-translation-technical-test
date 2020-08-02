@@ -12,4 +12,4 @@ Document = str
 TokenizedDocument = List[str]
 Vocabulary = Iterable[str]
 
-Prediction = namedtuple("Prediction", "class_ probability")
+Prediction = namedtuple("Prediction", "detected_language class_ probability")
