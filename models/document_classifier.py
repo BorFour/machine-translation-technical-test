@@ -1,76 +1,32 @@
-from typing import Tuple, Union, List, Optional
-import os
-import logging
-from pprint import pprint
+from typing import Tuple, List, Optional
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-import joblib
 
-from loader import load_corpus_as_dataframe, load_translations_to_df
-from preprocess.normalize import normalize_document
-from preprocess.doc_embedding import (
-    document_to_vector,
-    words_in_model,
-    load_word_embeddings_model,
-    DummyEmbedding,
-)
+
 from preprocess.clean import clean_text
 from preprocess.detect_language import detected_language
 from translation.translate import translate_to_spanish_from_df
 from custom_types import Prediction, TranslationInput
-from utils import log, fix_seeds
+from utils import parse_execution_mode
+
+from .base_model import BaseModel
 
 
-fix_seeds()
-tqdm.pandas()
-
-
-class DocumentClassifier(object):
+class DocumentClassifier(BaseModel):
     """docstring for DocumentClassifier"""
 
     def __init__(self):
         super(DocumentClassifier, self).__init__()
-        self.corpus_dir: str = os.path.join("data", "documents_challenge")
-        self.translations_dir: str = os.path.join("data", "translations_es")
         self.class_encoder = self.class_decoder = None
-        self._load_models()
-
-    def _load_models(self):
-        log.info("Loading embeddings model")
-        # self.embeddings_model = DummyEmbedding()
-        self.embeddings_model = load_word_embeddings_model()
-
-    def _load_data(self) -> pd.DataFrame:
-        df = load_corpus_as_dataframe(self.corpus_dir)
-        log.info(f"Loaded {len(df)} samples")
-
-        df = load_translations_to_df(df, self.translations_dir)
-        df = df[~df.translated_text.isnull()]
-        log.info(f"{len(df)} translated documents")
-
-        return df
+        self._load_embeddings_model()
 
     def _preprocess_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        # Preprocess
-        log.info("Normalizing documents' text")
-        df["normalized_text"] = df.translated_text.progress_apply(
-            lambda x: normalize_document(x, self.embeddings_model)
-        )
-
-        log.info("Calculating document embeddings")
-
-        df["document_embeddings"] = df.normalized_text.progress_apply(
-            lambda x: document_to_vector(
-                words_in_model(x, self.embeddings_model), self.embeddings_model
-            )
-        )
-
-        df = df[~df.document_embeddings.isnull()]
+        df = self._normalize_df(df, self.embeddings_model)
+        df = self._documents_to_embedding_vector(df)
         return df
 
     def _calculate_class_encoder(self, categories_series: pd.Series):
@@ -85,7 +41,6 @@ class DocumentClassifier(object):
 
     def _split_df(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         train_df, test_df = train_test_split(df, test_size=0.1)
-
         return train_df, test_df
 
     @staticmethod
@@ -104,6 +59,7 @@ class DocumentClassifier(object):
 
     def _train_xgboot(self, train_df: pd.DataFrame, test_df: pd.DataFrame):
 
+        num_class = max(train_df.context_categorical.cat.codes) + 1
         y_true = test_df.context_categorical.cat.codes
 
         dtrain = self._embeddings_list_to_dmatrix(
@@ -114,9 +70,6 @@ class DocumentClassifier(object):
             test_df.document_embeddings.tolist(), label=y_true
         )
 
-        num_class = max(train_df.context_categorical.cat.codes) + 1
-
-        # Fit model
         param = {
             "max_depth": 2,
             "eta": 1,
@@ -186,24 +139,21 @@ class DocumentClassifier(object):
 
         return predictions
 
-    def save(self, filename: str = "document_classifier.joblib.pkl"):
-        joblib.dump(self, filename)
-
-    @classmethod
-    def load(
-        self, filename: str = "document_classifier.joblib.pkl"
-    ) -> "DocumentClassifier":
-        log.warning(f"Loading pretrained DocumentClassifier from {filename}")
-        instance = joblib.load(filename)
-        return instance
-
 
 if __name__ == "__main__":
-    # Train the model yourself
-    # classifier = DocumentClassifier()
-    # classifier.train()
 
-    # Load the model from a pickle
-    classifier = DocumentClassifier.load()
-    classifier.evaluate()
+    execution_mode = parse_execution_mode()
+
+    # Train the model yourself
+    if execution_mode == "train":
+        classifier = DocumentClassifier()
+        classifier.train()
+    elif execution_mode == "evaluate":
+        # Load the model from a pickle
+        classifier = DocumentClassifier.load()
+        classifier.evaluate()
+    else:
+        raise ValueError(
+            f"Execution mode {execution_mode} not implemented for this module"
+        )
     breakpoint()
