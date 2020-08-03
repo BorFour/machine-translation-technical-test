@@ -18,7 +18,6 @@ Fondata dai Cumani nell'VIII secolo a.C., fu tra le città più importanti della
         ]
     )
     pprint(prediction)
-    breakpoint()
 
 
 if __name__ == "__main__":

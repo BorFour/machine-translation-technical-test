@@ -1,6 +1,5 @@
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 import os
-from pprint import pprint
 
 import tqdm
 import pandas as pd
@@ -12,10 +11,10 @@ DOCUMENTS_DIR = "./data/documents_challenge/"
 TRANSLATIONS_OUTPUT_DIR = "./data/translations_es/"
 
 
-def load_corpus_from_dir(corpus_dir: str) -> List[Tuple[str, str, str]]:
+def load_corpus_from_dir(corpus_dir: str = DOCUMENTS_DIR) -> List[Tuple[str, str, str]]:
     dirs_and_filenames: List[Tuple[str, str]] = []
 
-    for root, dirs, files in os.walk(DOCUMENTS_DIR, topdown=False):
+    for root, dirs, files in os.walk(corpus_dir, topdown=False):
         for name in files:
             dirs_and_filenames.append((root, name))
 
@@ -32,13 +31,18 @@ def load_corpus_from_dir(corpus_dir: str) -> List[Tuple[str, str, str]]:
     return corpus_as_list
 
 
-def load_corpus_as_dataframe(corpus_dir: str) -> pd.DataFrame:
+def load_corpus_as_dataframe(corpus_dir: str = DOCUMENTS_DIR) -> pd.DataFrame:
     corpus = load_corpus_from_dir(corpus_dir)
     df = pd.DataFrame(corpus, columns=["context", "language", "docname", "text"])
     return df
 
 
-def load_translation(context: str, language: str, docname: str, translations_dir: str = TRANSLATIONS_OUTPUT_DIR) -> str:
+def load_translation(
+    context: str,
+    language: str,
+    docname: str,
+    translations_dir: str = TRANSLATIONS_OUTPUT_DIR,
+) -> str:
     filepath = os.path.join(translations_dir, context, language, docname)
 
     try:
@@ -50,9 +54,12 @@ def load_translation(context: str, language: str, docname: str, translations_dir
     return translation
 
 
-def load_translations_to_df(df: pd.DataFrame, translations_dir: str = TRANSLATIONS_OUTPUT_DIR) -> pd.DataFrame:
+def load_translations_to_df(
+    df: pd.DataFrame, translations_dir: str = TRANSLATIONS_OUTPUT_DIR
+) -> pd.DataFrame:
     df["translated_text"] = df[["context", "language", "docname"]].apply(
-        lambda x: load_translation(x.context, x.language, x.docname, translations_dir), axis=1
+        lambda x: load_translation(x.context, x.language, x.docname, translations_dir),
+        axis=1,
     )
     return df
 

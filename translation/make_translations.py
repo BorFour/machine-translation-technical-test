@@ -1,10 +1,17 @@
 import os
-
-
 from multiprocessing.pool import ThreadPool
-import tqdm
 
-TRANSLATIONS_OUTPUT_DIR: str = "drive/My Drive/ea_test/translations_es/"
+import tqdm
+import pandas as pd
+
+from loader import load_corpus_as_dataframe
+from preprocess.clean import clean_text
+from utils import log
+
+from .translate import translate_to_spanish
+
+
+TRANSLATIONS_OUTPUT_DIR: str = "data/translations_es/"
 
 
 def save_translation(
@@ -19,7 +26,7 @@ def save_translation(
         f.write(translation)
 
 
-def make_translations(
+def make_and_save_translations(
     df: pd.DataFrame,
     source_language: str,
     batch_size: int = 15,
@@ -49,7 +56,7 @@ def make_translations(
                 batch_df.cleaned_text.tolist(), source_language=source_language
             )
 
-            POOL.imap_unordered(
+            pool.imap_unordered(
                 lambda x: save_translation(x[0], x[1], x[2], x[3]),
                 zip(translation, batch_df.context, batch_df.language, batch_df.docname),
             )
@@ -58,24 +65,24 @@ def make_translations(
             raise
 
 
-def asdfasd():
+def translate_all_documents(df):
     french_df = df[df.language == "fr"]
     english_df = df[df.language == "en"]
     spanish_df = df[df.language == "es"]
 
+    log.info(f"Begining translations for {len(df)} documents")
+
     # French to Spanish translations
-    # make_translations(french_df, source_language="fr", batch_size=15, offset=2460, limit=int(len(french_df) / 2))
-    # make_translations(french_df, source_language="fr", batch_size=15, offset=int(len(french_df) / 2))
+    make_and_save_translations(french_df, source_language="fr", batch_size=15)
 
     # English to Spanish translations
-    make_translations(
-        english_df,
-        source_language="en",
-        batch_size=15,
-        offset=0,
-        limit=int(len(english_df) / 2),
-    )
-    # make_translations(english_df, source_language="en", batch_size=15, offset=int(len(english_df) / 2))
+    make_and_save_translations(english_df, source_language="en", batch_size=15)
 
     # Spanish to Spanish translations (do nothing but save them to disk)
-    # make_translations(spanish_df, source_language="es", batch_size=15)
+    make_and_save_translations(spanish_df, source_language="es", batch_size=15)
+
+
+if __name__ == "__main__":
+    df = load_corpus_as_dataframe()
+    df = clean_text(df)
+    translate_all_documents(df)
