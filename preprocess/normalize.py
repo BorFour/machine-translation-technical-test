@@ -18,11 +18,20 @@ def remove_stopwords(tokens: TokenizedDocument) -> TokenizedDocument:
     return [token for token in tokens if token.lower() not in SPANISH_STOPWORDS]
 
 
-def normalize_document(document: Document, vocab: Vocabulary) -> TokenizedDocument:
+def normalize_document(
+    document: Document, vocab: Vocabulary = None
+) -> TokenizedDocument:
+    if not document:
+        return None
+
     tokenized_document = tokenize_document(document)
     tokenized_document = [token.lower() for token in tokenized_document]
     unique_tokens = list(set(tokenized_document))
     tokens = remove_stopwords(unique_tokens)
+
+    if not vocab:
+        return tokens
+
     tokens_in_vocabulary = [t for t in tokens if t in vocab]
 
     return tokens_in_vocabulary

@@ -3,13 +3,11 @@
 https://github.com/dccuchile/spanish-word-embeddings
 https://medium.com/@paritosh_30025/natural-language-processing-text-data-vectorization-af2520529cf7
 """
-from typing import List, Tuple
+from typing import List, Union
 
 import nltk
 from nltk.tokenize import word_tokenize
-from gensim.models.wrappers import FastText
 from gensim.models import KeyedVectors
-from gensim import corpora
 import numpy as np
 
 from utils import log
@@ -44,7 +42,7 @@ def words_in_model(document: List[str], model: KeyedVectors) -> List[str]:
 
 def document_to_vector(
     document: List[str], model: KeyedVectors
-) -> Tuple[List[str], np.array]:
+) -> Union[np.array, None]:
 
     if not document:
         return None

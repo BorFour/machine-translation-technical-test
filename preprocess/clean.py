@@ -1,8 +1,6 @@
-from typing import Union
 import re
 
 import pandas as pd
-from langdetect import detect
 
 from loader import load_corpus_as_dataframe, DOCUMENTS_DIR
 
@@ -43,7 +41,8 @@ def clean_text(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     df = load_corpus_as_dataframe(DOCUMENTS_DIR)
     df = df.sample(n=10)
     df = clean_text(df)

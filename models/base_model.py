@@ -3,6 +3,8 @@ import os
 from tqdm import tqdm
 import joblib
 import pandas as pd
+import spacy
+from nltk.stem import SnowballStemmer
 
 from loader import load_corpus_as_dataframe, load_translations_to_df
 from preprocess.doc_embedding import (
@@ -17,12 +19,15 @@ from utils import log, fix_seeds
 fix_seeds()
 tqdm.pandas()
 
+STEMMER = SnowballStemmer("spanish")
+
 
 class BaseModel(object):
     def __init__(self):
         super(BaseModel, self).__init__()
         self.corpus_dir: str = os.path.join("data", "documents_challenge")
         self.translations_dir: str = os.path.join("data", "translations_es")
+        self.nlp = spacy.load("es", disable=["parser", "ner"])
 
     @classmethod
     def _default_pickle_name(cls) -> str:
@@ -62,7 +67,7 @@ class BaseModel(object):
         )
         return df
 
-    def _documents_to_embedding_vector(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _documents_to_embedding_vector_df(self, df: pd.DataFrame) -> pd.DataFrame:
         log.info("Calculating document embeddings")
         df["document_embeddings"] = df.normalized_text.progress_apply(
             lambda x: document_to_vector(
@@ -82,4 +87,8 @@ class BaseModel(object):
             return [token.lemma_ for token in doc if token.pos_ in allowed_postags]
 
         df["lemmatized_text"] = df.normalized_text.progress_apply(lemmatize_sent)
+        df = df[df.lemmatized_text.apply(lambda x: len(x)) > 0]
+        df["stemmed_text"] = df.lemmatized_text.progress_apply(
+            lambda x: [STEMMER.stem(token) for token in x]
+        )
         return df

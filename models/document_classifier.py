@@ -1,4 +1,5 @@
 from typing import Tuple, List, Optional
+from pprint import pprint
 
 import numpy as np
 import pandas as pd
@@ -26,7 +27,7 @@ class DocumentClassifier(BaseModel):
 
     def _preprocess_df(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self._normalize_df(df, self.embeddings_model)
-        df = self._documents_to_embedding_vector(df)
+        df = self._documents_to_embedding_vector_df(df)
         return df
 
     def _calculate_class_encoder(self, categories_series: pd.Series):
@@ -95,7 +96,6 @@ class DocumentClassifier(BaseModel):
         self._calculate_class_encoder(df.context_categorical)
         self.train_df, self.test_df = self._split_df(df)
         self._train_xgboot(self.train_df, self.test_df)
-        self.save()
 
     def evaluate(self):
         y_true = self.test_df.context_categorical.cat.codes
@@ -119,7 +119,6 @@ class DocumentClassifier(BaseModel):
         df = clean_text(df)
         df = detected_language(df)
         df = translate_to_spanish_from_df(df)
-
         df = self._preprocess_df(df)
 
         dpredict = xgb.DMatrix(np.stack(df.document_embeddings.tolist()))
@@ -141,19 +140,28 @@ class DocumentClassifier(BaseModel):
 
 
 if __name__ == "__main__":
-
     execution_mode = parse_execution_mode()
 
-    # Train the model yourself
     if execution_mode == "train":
+        # Train the model yourself
         classifier = DocumentClassifier()
         classifier.train()
+        classifier.save()
     elif execution_mode == "evaluate":
         # Load the model from a pickle
         classifier = DocumentClassifier.load()
         classifier.evaluate()
+    elif execution_mode == "predict":
+        # Interactive predictions mode!
+        classifier = DocumentClassifier.load()
+        while True:
+            try:
+                sentence = input("Enter a sentence to classify: ")
+                prediction = classifier.predict(sentence)[0]
+                pprint(prediction)
+            except KeyboardInterrupt:
+                break
     else:
         raise ValueError(
             f"Execution mode {execution_mode} not implemented for this module"
         )
-    breakpoint()
