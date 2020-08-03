@@ -51,7 +51,7 @@ def load_translation(context: str, language: str, docname: str, translations_dir
 
 
 def load_translations_to_df(df: pd.DataFrame, translations_dir: str = TRANSLATIONS_OUTPUT_DIR) -> pd.DataFrame:
-    df["loaded_translation"] = df[["context", "language", "docname"]].apply(
+    df["translated_text"] = df[["context", "language", "docname"]].apply(
         lambda x: load_translation(x.context, x.language, x.docname, translations_dir), axis=1
     )
     return df

@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Optional
 import os
 import logging
 from pprint import pprint
@@ -88,22 +88,31 @@ class DocumentClassifier(object):
 
         return train_df, test_df
 
+    @staticmethod
+    def _embeddings_list_to_dmatrix(
+        embeddings_list: List[np.array], label: Optional[np.array] = None
+    ) -> xgb.DMatrix:
+        stacked_embeddings = np.stack(embeddings_list)
+
+        dmatrix = (
+            xgb.DMatrix(stacked_embeddings, label=label,)
+            if label is not None
+            else xgb.DMatrix(stacked_embeddings)
+        )
+
+        return dmatrix
+
     def _train_xgboot(self, train_df: pd.DataFrame, test_df: pd.DataFrame):
-        train_stacked_document_embeddings = np.stack(
-            train_df.document_embeddings.tolist()
-        )
-        test_stacked_document_embeddings = np.stack(
-            test_df.document_embeddings.tolist()
-        )
 
         y_true = test_df.context_categorical.cat.codes
 
-        # Define model
-        dtrain = xgb.DMatrix(
-            train_stacked_document_embeddings,
+        dtrain = self._embeddings_list_to_dmatrix(
+            train_df.document_embeddings.tolist(),
             label=train_df.context_categorical.cat.codes,
         )
-        dtest = xgb.DMatrix(test_stacked_document_embeddings, label=y_true)
+        dtest = self._embeddings_list_to_dmatrix(
+            test_df.document_embeddings.tolist(), label=y_true
+        )
 
         num_class = max(train_df.context_categorical.cat.codes) + 1
 
@@ -134,6 +143,17 @@ class DocumentClassifier(object):
         self.train_df, self.test_df = self._split_df(df)
         self._train_xgboot(self.train_df, self.test_df)
         self.save()
+
+    def evaluate(self):
+        y_true = self.test_df.context_categorical.cat.codes
+        dtest = self._embeddings_list_to_dmatrix(
+            self.test_df.document_embeddings.tolist(), label=y_true
+        )
+
+        pred_probs = self.bst.predict(dtest)
+        y_pred = np.argmax(pred_probs, axis=1)
+
+        print(classification_report(y_true, y_pred))
 
     def predict(self, documents: TranslationInput) -> List[Prediction]:
 
@@ -185,13 +205,5 @@ if __name__ == "__main__":
 
     # Load the model from a pickle
     classifier = DocumentClassifier.load()
-    prediction = classifier.predict(
-        [
-            """
-Elle se situe au cœur d'un vaste bassin sédimentaire aux sols fertiles et au climat tempéré, le bassin parisien, sur une boucle de la Seine, entre les confluents de celle-ci avec la Marne et l'Oise. Paris est également le chef-lieu de la région Île-de-France et le centre de la métropole du Grand Paris, créée en 2016. Elle est divisée en arrondissements, comme les villes de Lyon et de Marseille, au nombre de vingt. Administrativement, la ville constitue depuis le 1er janvier 2019 une collectivité à statut particulier nommée « Ville de Paris » (auparavant, elle était à la fois une commune et un département). L'État y dispose de prérogatives particulières exercées par le préfet de police de Paris. La ville a connu de profondes transformations sous le Second Empire dans les décennies 1850 et 1860 à travers d'importants travaux consistant notamment au percement de larges avenues, places et jardins et la construction de nombreux édifices, dirigés par le baron Haussmann, donnant à l'ancien Paris médiéval le visage qu'on lui connait aujourd'hui.
-La ville de Paris comptait 2,187 millions d'habitants au 1er janvier 2020. Ses habitants sont appelés Parisiens. L'agglomération parisienne s’est largement développée au cours du xxe siècle, rassemblant 10,73 millions d'habitants au 1er janvier 2020, et son aire urbaine (l'agglomération et la couronne périurbaine) comptait 12,78 millions d'habitants. L'agglomération parisienne est ainsi la plus peuplée de France, elle est la quatrième du continent européen et la 32e plus peuplée du monde au 1er janvier 2019
-""",
-        ]
-    )
-    pprint(prediction)
+    classifier.evaluate()
     breakpoint()
