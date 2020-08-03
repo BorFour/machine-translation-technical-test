@@ -78,7 +78,7 @@ You'll have to download the [FastText embeddings from SBWC](http://dcc.uchile.cl
 ### spaCy Spanish corpus
 
 ```bash
-python3 -m spacy download en
+python3 -m spacy download es
 ```
 
 ## Optional downloads
