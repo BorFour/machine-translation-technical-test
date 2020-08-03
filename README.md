@@ -106,6 +106,14 @@ Also, you might want to load the pickles of the models that I trained if you wan
 
 ## Running the code
 
+### Open the Jupyter notebook of the EDA
+
+First, start the jupyter server and open [the notebook](./imgs/lda_topics_6.png) from within the web app
+
+```bash
+python3 -m jupyter notebook
+```
+
 ### Translate the documents to Spanish
 
 This will save make the translations and save them in separate file, with the same folder structure as in `documents_challenge.zip`, to the `./data/translations_es/` folder. Translating the whole corpus took around 20 hours on a single **12GB NVIDIA Tesla K80 GPU**, so it is strongly recommended to use a GPU of the same size.
