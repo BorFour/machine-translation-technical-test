@@ -1,4 +1,4 @@
-# Associate Data Scientist - Technical Test
+# Technical Test
 
 ## Objective 1
 
